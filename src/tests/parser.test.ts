@@ -20,6 +20,16 @@ test('Parses boolean key as boolean', () => {
     expect(parser.dump().replace(tabNewline, '')).toBe("interface test {test: boolean;test2: boolean;}");
 });
 
+test('Creates nested interfaces', () => {
+    const parser = new Parser('{"obj": {"p": 1}}', "test");
+
+    expect(parser.dump().replace(tabNewline, '')).toBe("interface test {obj: obj;}interface obj {p: number;}");
+});
+
+/**
+ * Arrays
+ */
+
 test('Parses string array as string array', () => {
     const parser = new Parser('{"test": ["a", "b", "c"]}', "test");
 
@@ -60,6 +70,22 @@ test('Parses mixed array as any array', () => {
     expect(parser.dump().replace(tabNewline, '')).toBe("interface test {test: Array<any>;}");
 });
 
+test('Parses nested arrays', () => {
+    const parser = new Parser('{"test": [["a"], ["b"]]}', "test");
+
+    expect(parser.dump().replace(tabNewline, '')).toBe("interface test {test: Array<Array<string>>;}");
+});
+
+test('Parses mixed nested arrays', () => {
+    const parser = new Parser('{"test": [["a"], [1]]}', "test");
+
+    expect(parser.dump().replace(tabNewline, '')).toBe("interface test {test: Array<Array<any>>;}");
+
+    parser.load('{"test": [["a"], [1], [{}]]}');
+
+    expect(parser.dump().replace(tabNewline, '')).toBe("interface test {test: Array<Array<any>>;}");
+});
+
 test('Creates interface for array', () => {
     const parser = new Parser('{"obj": [{"p": 1}]}', "test");
 
@@ -78,8 +104,6 @@ test('Creates any typed interface key for mixed type object array', () => {
     expect(parser.dump().replace(tabNewline, '')).toBe("interface test {obj: Array<any>;}");
 });
 
-test('Creates nested interfaces', () => {
-    const parser = new Parser('{"obj": {"p": 1}}', "test");
-
-    expect(parser.dump().replace(tabNewline, '')).toBe("interface test {obj: obj;}interface obj {p: number;}");
-});
+/**
+ * End Arrays
+ */
