@@ -86,6 +86,12 @@ test('Parses mixed nested arrays', () => {
     expect(parser.dump().replace(tabNewline, '')).toBe("interface test {test: Array<Array<any>>;}");
 });
 
+test('Parses mixed array with nested array', () => {
+    const parser = new Parser('{"test": [["a"], ["b"], "c", 1, 2, ["3"]]}', "test");
+
+    expect(parser.dump().replace(tabNewline, '')).toBe("interface test {test: Array<any>;}");
+});
+
 test('Creates interface for array', () => {
     const parser = new Parser('{"obj": [{"p": 1}]}', "test");
 

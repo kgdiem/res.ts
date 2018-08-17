@@ -85,6 +85,8 @@ export class Parser {
         let firstType: any;
         let pastObjects: Array<string> = [];
         let collision: boolean = false;
+        let hasArray: boolean = false;
+
 
         const response: ArrayTransformResponse = {
             type: '',
@@ -99,7 +101,16 @@ export class Parser {
             isObject = (type === 'object');
 
             if(isObject && Array.isArray(val)){
-                
+                if(hasArray){
+                    const arrayType = this.transformArray(name, val).type;
+
+                    if(arrayType !== firstType){
+                        firstType = 'Array<any>';
+                    }
+                } else {
+                    hasArray = true;
+                    firstType = this.transformArray(name, val).type;
+                }
             }
             else if (isObject) {
                 if(pastObjects.length && pastObjects.indexOf(stringKeys(val)) < 0){
