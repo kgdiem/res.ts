@@ -17,11 +17,11 @@ parser.dump() // dumps string interface[s]
 # Known Issues:
 * Variably typed object properties in array
   * Arrays of objects with the same keys but different types are ignored 
+* Nested arrays unimplemented
+  * ex, `{val: [[],[]]}`
 
 # Todo
 * tsc output to js folder
-* unit tests
-* Type check array objects
 * Add HTTP options
 * Add flat file options
 * Wrap up library into a CLI

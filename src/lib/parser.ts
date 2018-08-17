@@ -37,7 +37,7 @@ export class Parser {
         }
     }
 
-    private transform(name: string, object: any): string {
+    private transform(name: string, object: any, anyTypeKeys?: string[]): string {
         let val, type, isObject;
         let ts: string = this.getName(name);
         let arrayTransformResponse: ArrayTransformResponse;
@@ -45,6 +45,11 @@ export class Parser {
         let interfaces = new Array<string>();
 
         Object.keys(object).map(key => {
+            if(anyTypeKeys && anyTypeKeys.indexOf(key) > -1){
+                ts += this.map(key, 'any');
+                return;
+            }
+
             val = object[key];
             
             type = typeof(val);
@@ -58,7 +63,8 @@ export class Parser {
                     interfaces.push(arrayTransformResponse.interface);
 
                 type = arrayTransformResponse.type;
-            } else if (isObject) {
+            }
+            else if (isObject) {
                 interfaces.push(this.transform(key, val));
 
                 type = key;
@@ -77,13 +83,13 @@ export class Parser {
     private transformArray(name: string, object: Array<any>): ArrayTransformResponse {
         let val, type, isObject;
         let firstType: any;
+        let pastObjects: Array<string> = [];
+        let collision: boolean = false;
 
         const response: ArrayTransformResponse = {
             type: '',
             interface: ''
         }
-
-        let pastObjects = [];
 
         for(let i = 0; i < object.length; i++){
             val = object[i];
@@ -100,7 +106,15 @@ export class Parser {
                     return anyType();
                 }
 
-                response.interface = this.transform(name, val);
+                const interfaceVal = this.transform(name, val);
+
+                if(!response.interface){
+                    response.interface = interfaceVal;
+                }
+                else if(response.interface !== interfaceVal){
+                    collision = true;
+                }
+                
                 firstType = name;
 
                 pastObjects.push(stringKeys(val));
@@ -114,18 +128,39 @@ export class Parser {
 
         response.type = `Array<${firstType}>`;
 
+        if(collision)
+            return this.handleCollision(name, response, object);
+
         return response;
 
-        function stringKeys(val: any){
+        function stringKeys(val: any): string {
             return JSON.stringify(Object.keys(val).sort());
         }
 
-        function anyType(){
+        function anyType(): ArrayTransformResponse {
             response.type = 'Array<any>';
             response.interface = '';
 
             return response;
         }
+    }
+
+    private handleCollision(name: string, response: ArrayTransformResponse, arr: Array<any>): ArrayTransformResponse {
+        const mixedKeys: Array<string> = [];
+
+        arr.map((obj, index) => {
+            if(!index)
+                return;
+
+            Object.keys(obj).map(key => {
+                if(typeof(obj[key]) !== typeof(arr[index - 1][key]) && mixedKeys.indexOf(key) < 0)
+                    mixedKeys.push(key);
+            });
+        });
+
+        response.interface = this.transform(name, arr[0], mixedKeys);
+
+        return response;
     }
 
     private getName(name: string): string {

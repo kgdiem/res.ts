@@ -1,3 +1,7 @@
+export * from './lib/public_api';
+
+/*
+example: 
 import { Parser } from './lib/public_api';
 
 const testJSON = `{
@@ -16,3 +20,4 @@ const interfaceName = 'Test';
 const parser = new Parser(testJSON, interfaceName);
 
 console.log(parser.dump());
+*/
