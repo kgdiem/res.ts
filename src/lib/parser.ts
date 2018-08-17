@@ -8,7 +8,7 @@ export class Parser {
             this.load(str, name);
     }
 
-    load(str: string, name?: string, ){
+    load(str: string, name?: string): void {
         if(name)
             this._name = name;
         this.raw = str;
@@ -16,7 +16,7 @@ export class Parser {
         this.object = this.parse(str);
     }
 
-    dump(){
+    dump(): string {
         if(!this.raw || !this.object) {
             throw new Error('No valid JSON string');
         } else if (!this._name) {
@@ -29,7 +29,7 @@ export class Parser {
         return this.transform(this._name, this.object);
     }
 
-    private parse(str: string){
+    private parse(str: string): any {
         try {
             return JSON.parse(str);
         } catch(e) {
@@ -128,7 +128,7 @@ export class Parser {
         }
     }
 
-    private getName(name: string){
+    private getName(name: string): string {
         return `interface ${name} {\n`;
     }
 
