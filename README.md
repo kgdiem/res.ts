@@ -18,7 +18,7 @@ parser.dump() // dumps string interface[s]
 * None
 
 # Todo
-* tsc output to js folder
-* Add HTTP options
+* Validate that interface compiles
 * Add flat file options
+* Write to file
 * Wrap up library into a CLI

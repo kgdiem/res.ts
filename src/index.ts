@@ -2,7 +2,8 @@ export * from './lib/public_api';
 
 /*
 example: 
-import { Parser } from './lib/public_api';
+
+import { Parser, Http } from './lib/public_api';
 
 const testJSON = `{
     "name": "test",
@@ -20,4 +21,14 @@ const interfaceName = 'Test';
 const parser = new Parser(testJSON, interfaceName);
 
 console.log(parser.dump());
+
+const http = new Http(parser);
+
+const testHttp = async () => {
+    const res: string = await http.transformResponse('Test', 'https://jsonplaceholder.typicode.com/todos/1');
+
+    console.log(res);
+}
+
+testHttp();
 */
