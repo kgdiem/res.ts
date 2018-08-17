@@ -7,3 +7,9 @@ test('Parses string key as string', () => {
 
     expect(parser.dump().replace(tabNewline, '')).toBe("interface test {test: string;}");
 });
+
+test('Parses number key as number', () => {
+    const parser = new Parser('{"test": 1}', "test");
+
+    expect(parser.dump().replace(tabNewline, '')).toBe("interface test {test: number;}");
+})
