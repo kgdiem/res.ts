@@ -15,10 +15,9 @@ parser.dump() // dumps string interface[s]
 ```
 
 # Known Issues:
-* None
+* tmp directory .ts files aren't removed
 
 # Todo
-* Validate that interface compiles
 * Add flat file options
 * Write to file
 * Wrap up library into a CLI

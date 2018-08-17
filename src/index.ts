@@ -20,7 +20,13 @@ const interfaceName = 'Test';
 
 const parser = new Parser(testJSON, interfaceName);
 
-console.log(parser.dump());
+const testParser = async () => {
+    const res: string = await parser.dump();
+
+    console.log(res);
+}
+
+testParser();
 
 const http = new Http(parser);
 

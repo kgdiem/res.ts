@@ -9,7 +9,7 @@ export class Http {
     }
 
     async transformResponse(entity: string, url: string, headers?: string): Promise<string> {
-        const res: Response = await fetch(url, this.fetchInit(headers)); // get data
+        const res: Response = await fetch(url, this.fetchInit(headers));
 
         if(!res.ok)
             throw new Error(`Couldn't fetch ${entity}, response ${res.status} ${res.statusText}`);

@@ -1,3 +1,8 @@
+import { ArrayTransformResponse } from './types';
+
+import { Compiler } from './compiler';
+import { Writer } from './writer';
+
 export class Parser {
     private _name: string = '';
     private object: any;
@@ -25,7 +30,7 @@ export class Parser {
         this.object = json;
     }
 
-    dump(): string {
+    async dump(): Promise<string> {
         if(!this.raw || !this.object) {
             throw new Error('No valid JSON string');
         } else if (!this._name) {
@@ -33,9 +38,21 @@ export class Parser {
         }
 
         if(Array.isArray(this.object))
-            throw new Error('Arrays cannot be transformed into an interface')
+            throw new Error('Arrays cannot be transformed into an interface');
 
-        return this.transform(this._name, this.object);
+        const ts = this.transform(this._name, this.object);
+
+        const fileName = await Writer.write(ts, '.ts');
+
+        const compiled: boolean = Compiler.compile(fileName);
+
+        Writer.delete(fileName);
+
+        if(!compiled){
+            throw new Error(`Compiler error`);
+        }
+
+        return ts;
     }
 
     private parse(str: string): any {
@@ -192,15 +209,10 @@ export class Parser {
     }
 
     private getName(name: string): string {
-        return `interface ${name} {\n`;
+        return `export interface ${name} {\n`;
     }
 
     private map(key: string, type: string): string {
         return `\t${key}: ${type};\n`;
     }
-}
-
-interface ArrayTransformResponse {
-    type: string,
-    interface: string
 }
