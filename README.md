@@ -70,7 +70,7 @@ testHttp();
 
 # Known Issues:
 
-# Todo
+# Todo:
 * Generate project folder
 * Generate services
 * Refactor
