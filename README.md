@@ -18,6 +18,7 @@ parser.dump() // dumps string interface[s]
 * tmp directory .ts files aren't removed
 
 # Todo
-* Add flat file options
 * Write to file
+* JSON Array support
+* Add flat file options
 * Wrap up library into a CLI
