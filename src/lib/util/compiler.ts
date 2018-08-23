@@ -10,6 +10,20 @@ export class Compiler {
             .getPreEmitDiagnostics(program)
             .concat(emitResult.diagnostics);
 
-        return (!emitResult.emitSkipped && !allDiagnostics.length);
+        const compiled = (!emitResult.emitSkipped && !allDiagnostics.length);
+
+        if(!compiled){
+            let errors = '';
+
+            const entries = allDiagnostics.entries();
+            let entry;
+
+            while(entry = entries.next()){
+                errors += `${entry.value}\n`;
+            }
+
+            throw new Error(errors);
+        }
+        return compiled;
     }
 }

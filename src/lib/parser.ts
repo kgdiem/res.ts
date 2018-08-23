@@ -149,7 +149,7 @@ export class Parser implements IParser {
         try {
             return JSON.parse(str);
         } catch(e) {
-            throw new Error(`Invalid JSON ${e}`);
+            throw new Error(`Invalid JSON ${this.raw} ${e}`);
         }
     }
 
