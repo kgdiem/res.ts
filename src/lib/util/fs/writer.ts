@@ -10,7 +10,7 @@ export class Writer {
         return new Promise(resolve => {
             const writeDir = dir ? dir : tempDir;
 
-            FileSystem.mkdir(writeDir);
+            new FileSystem().mkdir(writeDir);
 
             const filename = `${writeDir}/${new Date().getTime()}${extension}`;
 

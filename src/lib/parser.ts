@@ -2,12 +2,20 @@ import { ArrayTransformResponse } from './types';
 
 import { FileSystem, Compiler } from './util';
 
-export class Parser {
+import { Parser as IParser } from './types';
+
+export class Parser implements IParser {
+    private fileSystem: FileSystem;
+    private compiler: Compiler;
+
     private _name: string = '';
     private object: any;
     private raw: string = '';
 
-    constructor(str?: string, name?: string) {
+    constructor(fileSystem: FileSystem, compiler: Compiler, str?: string, name?: string) {
+        this.fileSystem = fileSystem;
+        this.compiler = compiler;
+
         if(str)
             this.load(str, name);
     }
@@ -30,7 +38,7 @@ export class Parser {
     }
 
     async loadFile(path: string, name?: string): Promise<void> {
-        const jsonString = await FileSystem.read(path);
+        const jsonString = await this.fileSystem.read(path);
         
         this.load(jsonString, name);
     }
@@ -50,15 +58,15 @@ export class Parser {
             ts = this.transform(this._name, this.object);
         }
 
-        const fileName = await FileSystem.write(ts, '.ts', dir);
+        const fileName = await this.fileSystem.write(ts, '.ts', dir);
 
-        const compiled: boolean = Compiler.compile(fileName);
+        const compiled: boolean = this.compiler.compile(fileName);
 
         if(!dir || !compiled){
-            FileSystem.delete(fileName);
+            this.fileSystem.delete(fileName);
         }
 
-        FileSystem.delete(fileName.replace(/.ts$/, '.js'));
+        this.fileSystem.delete(fileName.replace(/.ts$/, '.js'));
 
         if(!compiled){
             throw new Error(`Compiler error \n\n parser output: \n ${ts}`);
