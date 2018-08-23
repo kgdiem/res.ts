@@ -7,6 +7,7 @@ export class Generator implements IGenerator {
     private fs: FileSystem;
     private _root: string;
     private _projectDir: string = '';
+    private _typesDir: string = '';
 
     constructor(fs: FileSystem, root?: string){
         this.fs = fs;
@@ -18,24 +19,38 @@ export class Generator implements IGenerator {
         return this._root;
     }
 
-    set root(root: string){
+    set root(root: string) {
         this._root = root;
     }
 
-    project(path?: string) {
+    get projectDir(): string {
+        return this._projectDir;
+    }
+
+    get typesDir(): string {
+        return this._typesDir;
+    }
+
+    project(path?: string): string {
         if(!path)
             path = 'project';
 
         this._projectDir = `${this.root}/${path}`;
 
         this.fs.mkdir(this._projectDir);
+
+        return this._projectDir;
     }
 
-    types(){
+    types(): string {
         if(!this._projectDir)
             this.project();
 
-        this.fs.mkdir(`${this._projectDir}/types`);
+        this._typesDir = `${this._projectDir}/types`;
+
+        this.fs.mkdir(this._typesDir);
+
+        return this._typesDir;
     }
 
     private services(){

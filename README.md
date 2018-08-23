@@ -73,12 +73,14 @@ generator.project();
 
 // Creates types folder inside project directory
 generator.types();
+
+// Creates types inside type folder
+parser.dump(generator.typesDir);
 ```
 
 # Known Issues:
 
 # Todo:
-* Generate project folder
 * Generate services
 * Refactor
 * Wrap up library into a CLI
