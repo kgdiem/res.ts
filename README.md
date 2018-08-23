@@ -4,17 +4,16 @@ Create TypeScript Interfaces with JSON samples
 Inspired by wsdl2java, etc.
 
 # Current State:
-Basic parsing is implemented. There are plenty of shortcomings/oversights. See known issues
+Basic parsing is implemented. Read + fetch JSON, write to fs.
 
-# Usage: 
+# Known Issues:
 
-```
-const parser = new Parser([json string?], [interface name?]);
-parser.load([json string], [interface name]);
-parser.dump() // dumps string interface[s]
-```
+# Todo:
+* Generate services
+* Refactor
+* Wrap up library into a CLI
 
-# Examples:
+# Usage/Examples:
 ```
 import { ParserFactory, GeneratorFactory, Http } from './lib/public_api';
 
@@ -77,10 +76,3 @@ generator.types();
 // Creates types inside type folder
 parser.dump(generator.typesDir);
 ```
-
-# Known Issues:
-
-# Todo:
-* Generate services
-* Refactor
-* Wrap up library into a CLI
