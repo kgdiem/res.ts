@@ -14,6 +14,12 @@ test('Parses JSON array of objects with optionals', async () => {
     expect((await parser.dump()).replace(tabNewline, '')).toBe("export type tests = Array<test>;export interface test {test: string;optional?: number;}");
 });
 
+test('Parses JSON array of objects with nested arrays', async () => {
+    const parser = new Parser('[{"test": "a", "arr": [1,2,3]}, {"test": "a", "arr": [3,4,5]}]', "test");
+
+    expect((await parser.dump()).replace(tabNewline, '')).toBe("export type tests = Array<test>;export interface test {test: string;arr: Array<number>;}");
+});
+
 test('Returns type for json array of primatives', async () => {
     const parser = new Parser('["a"]', "test");
 
