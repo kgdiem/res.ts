@@ -20,6 +20,12 @@ test('Parses JSON array of objects with nested arrays', async () => {
     expect((await parser.dump()).replace(tabNewline, '')).toBe("export type tests = Array<test>;export interface test {test: string;arr: Array<number>;}");
 });
 
+test('Parses JSON array of objects with nested json arrays', async () => {
+    const parser = new Parser('[{"test": "a", "arr": [{"m": "a"}]}, {"test": "a", "arr": [{"m": "x"}]}]', "test");
+
+    expect((await parser.dump()).replace(tabNewline, '')).toBe("export type tests = Array<test>;export interface test {test: string;arr: Array<arr>;}export interface arr {m: string;}");
+});
+
 test('Returns type for json array of primatives', async () => {
     const parser = new Parser('["a"]', "test");
 
