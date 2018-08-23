@@ -17,6 +17,5 @@ parser.dump() // dumps string interface[s]
 # Known Issues:
 
 # Todo
-* JSON Array support
 * Add flat file options
 * Wrap up library into a CLI

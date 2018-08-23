@@ -76,8 +76,8 @@ test('Creates any typed interface key for mixed type object key array', async ()
     expect((await parser.dump()).replace(tabNewline, '')).toBe("export interface test {obj: Array<obj>;}export interface obj {p: any;}");
 });
 
-test('Creates any typed interface key for mixed type object array', async () => {
+test('Creates optional typed interface key for mixed type object array', async () => {
     const parser = new Parser('{"obj": [{"p": 1}, {"p": "a", "m": "x"}]}', "test");
 
-    expect((await parser.dump()).replace(tabNewline, '')).toBe("export interface test {obj: Array<any>;}");
+    expect((await parser.dump()).replace(tabNewline, '')).toBe("export interface test {obj: Array<obj>;}export interface obj {p: any;m?: string;}");
 });

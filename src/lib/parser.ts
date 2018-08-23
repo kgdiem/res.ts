@@ -37,10 +37,13 @@ export class Parser {
             throw new Error('No interface name');
         }
 
-        if(Array.isArray(this.object))
-            throw new Error('Arrays cannot be transformed into an interface');
-
-        const ts = this.transform(this._name, this.object);
+        let ts;
+        if(Array.isArray(this.object)){
+            ts = this.transformJsonArray(this._name, this.object);
+        }
+        else {
+            ts = this.transform(this._name, this.object);
+        }
 
         const fileName = await Writer.write(ts, '.ts', dir);
 
@@ -53,7 +56,7 @@ export class Parser {
         Writer.delete(fileName.replace(/.ts$/, '.js'));
 
         if(!compiled){
-            throw new Error(`Compiler error`);
+            throw new Error(`Compiler error \n\n parser output: \n ${ts}`);
         }
 
         return ts;
@@ -75,10 +78,11 @@ export class Parser {
         }
     }
 
-    private transform(name: string, object: any, anyTypeKeys?: string[]): string {
+    private transform(name: string, object: any, anyTypeKeys?: string[], optionalKeys?: string[]): string {
         let val, type, isObject;
         let ts: string = this.getName(name);
         let arrayTransformResponse: ArrayTransformResponse;
+        let optional = false;
 
         let interfaces = new Array<string>();
 
@@ -87,6 +91,8 @@ export class Parser {
                 ts += this.map(key, 'any');
                 return;
             }
+            
+            optional = !!(optionalKeys && optionalKeys.indexOf(key) > -1);
 
             val = object[key];
             
@@ -108,6 +114,8 @@ export class Parser {
                 type = key;
             }
 
+            key += optional ? '?' : '';
+
             ts += this.map(key, type);
         });
 
@@ -118,10 +126,27 @@ export class Parser {
         return ts;
     }
 
+    private transformJsonArray(name: string, object: any): string {
+        const singular = name.replace(/s$/, '');
+
+        const type = this.transformArray(singular, object);
+
+        const ploralized = singular + 's';
+
+        let ts = this.getType(ploralized, type.type);
+
+        ts += `\n${type.interface}`;
+
+        return ts;
+    }
+
     private transformArray(name: string, object: Array<any>): ArrayTransformResponse {
-        let val, type, isObject;
+        let val: any, type, isObject;
         let firstType: any;
-        let pastObjects: Array<string> = [];
+        let pastObjectLookup: Array<string> = [];
+        let pastObjects: Array<any> = [];
+        let optionalKeys: Array<string> = [];
+        let anyTypeKeys: Array<string> = [];
         let collision: boolean = false;
         let hasArray: boolean = false;
 
@@ -151,22 +176,50 @@ export class Parser {
                 }
             }
             else if (isObject) {
-                if(pastObjects.length && pastObjects.indexOf(stringKeys(val)) < 0){
-                    return anyType();
+                if(pastObjects.length && pastObjectLookup.indexOf(stringKeys(val)) < 0){
+                    const theseKeys = sortedKeys(val);
+                    const lastVal = object[i - 1];
+                    const lastKeys = sortedKeys(lastVal);
+
+                    theseKeys.map(key => {
+                        let lastKeysIndex = lastKeys.indexOf(key);
+
+                        if(lastKeysIndex === -1){
+                            optionalKeys.push(key);
+                        }
+                        else if(typeof(val[key]) !== typeof(lastVal[key])){
+                            anyTypeKeys.push(key);
+                        }
+                    });
+
+                    lastKeys.map(key => {
+                        let theseKeysIndex = theseKeys.indexOf(key);
+
+                        if(theseKeysIndex === -1){
+                            optionalKeys.push(key);
+                        }
+                        else if(typeof(val[key]) !== typeof(lastVal[key])){
+                            anyTypeKeys.push(key);
+                        }
+                    })
+
+                    response.interface = this.transform(name, val, anyTypeKeys, optionalKeys);
+                }
+                else {
+                    const interfaceVal = this.transform(name, val);
+
+                    if(!response.interface){
+                        response.interface = interfaceVal;
+                    }
+                    else if(response.interface !== interfaceVal){
+                        collision = true;
+                    }
                 }
 
-                const interfaceVal = this.transform(name, val);
-
-                if(!response.interface){
-                    response.interface = interfaceVal;
-                }
-                else if(response.interface !== interfaceVal){
-                    collision = true;
-                }
-                
                 firstType = name;
 
-                pastObjects.push(stringKeys(val));
+                pastObjectLookup.push(stringKeys(val));
+                pastObjects.push(val);
             }
             else if(!firstType) {
                 firstType = type;
@@ -182,8 +235,12 @@ export class Parser {
 
         return response;
 
+        function sortedKeys(val: any): string[] {
+            return Object.keys(val).sort();
+        }
+
         function stringKeys(val: any): string {
-            return JSON.stringify(Object.keys(val).sort());
+            return JSON.stringify(sortedKeys(val));
         }
 
         function anyType(): ArrayTransformResponse {
@@ -214,6 +271,10 @@ export class Parser {
 
     private getName(name: string): string {
         return `export interface ${name} {\n`;
+    }
+
+    private getType(name: string, value: string): string {
+        return `export type ${name} = ${value};`;
     }
 
     private map(key: string, type: string): string {

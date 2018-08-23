@@ -19,7 +19,10 @@ export class Writer {
     }
 
     static delete(filename: string) {
-        fs.unlinkSync(path.resolve(filename));
+        try{
+            fs.unlinkSync(path.resolve(filename));
+        }
+        catch(e){}
     }
 
     private static mkdir(dir: string){
