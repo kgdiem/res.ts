@@ -1,9 +1,9 @@
 export * from './lib/public_api';
 
+import { Parser, Http } from './lib/public_api';
+
 /*
 example: 
-*/
-import { Parser, Http } from './lib/public_api';
 
 const testJSON = `{
     "name": "test",
@@ -26,7 +26,13 @@ const testParser = async () => {
     console.log(res);
 }
 
+const testParserWriteFile = async () => {
+    const res: string = await parser.dump('./project');
+
+    console.log(res);
+}
 testParser();
+testParserWriteFile();
 
 const http = new Http(parser);
 
@@ -37,3 +43,4 @@ const testHttp = async () => {
 }
 
 testHttp();
+*/
