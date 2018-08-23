@@ -1,7 +1,9 @@
+import { Parser } from "../parser";
+
 export interface Generator {
-    project(path?: string): void;
+    parser: Parser;
+    project(entities: string[], path: string): Promise<string>;
     projectDir: string;
     root: string;
     typesDir: string;
-    types(): string;
 }

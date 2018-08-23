@@ -1,8 +1,12 @@
 import { Generator } from "./generator";
-import { FileSystem } from "./util";
+import { FileSystem, Compiler, Http } from "./util";
+import { Parser } from "./parser";
 
 export class GeneratorFactory {
-    static create(): Generator {
-        return new Generator(new FileSystem());
+    static create(rootDir?: string): Generator {
+        const fileSystem = new FileSystem();
+        const parser = new Parser(fileSystem, new Compiler(), new Http());
+
+        return new Generator(fileSystem, parser, rootDir);
     }
 }

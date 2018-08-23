@@ -1,16 +1,20 @@
 import { Parser } from "./parser";
 import { FileSystem } from "./util";
 
-import { Generator as IGenerator } from './types';
+import { Generator as IGenerator, ParserMetaData } from './types';
 
 export class Generator implements IGenerator {
+    public parser: Parser;
+
     private fs: FileSystem;
     private _root: string;
     private _projectDir: string = '';
     private _typesDir: string = '';
+    private _servicesDir: string = '';
 
-    constructor(fs: FileSystem, root?: string){
+    constructor(fs: FileSystem, parser: Parser, root?: string){
         this.fs = fs;
+        this.parser = parser;
 
         this._root = root ? root : './';
     }
@@ -31,21 +35,35 @@ export class Generator implements IGenerator {
         return this._typesDir;
     }
 
-    project(path?: string): string {
-        if(!path)
-            path = 'project';
+    async project(entities: string[], path='project'): Promise<string> {
+        this.makeProjectDir(path);
 
-        this._projectDir = `${this.root}/${path}`;
+        const apiMetaData: ParserMetaData[] = await this.types(entities);
 
-        this.fs.mkdir(this._projectDir);
+        this.services(apiMetaData);
 
         return this._projectDir;
     }
 
-    types(): string {
-        if(!this._projectDir)
-            this.project();
+    private async types(entities: string[]): Promise<ParserMetaData[]> {
+        this.makeTypesDir();
+        
+        return this.parser.process(this._typesDir, entities);
+    }
 
+    private services(apiMetaData: ParserMetaData[]){
+        this.makeServicesDir();
+
+        // generate services
+    }
+
+    private makeProjectDir(path: string){
+        this._projectDir = `${this.root}/${path}`;
+
+        this.fs.mkdir(this._projectDir);
+    }
+
+    private makeTypesDir(){
         this._typesDir = `${this._projectDir}/types`;
 
         this.fs.mkdir(this._typesDir);
@@ -53,10 +71,11 @@ export class Generator implements IGenerator {
         return this._typesDir;
     }
 
-    private services(){
-        if(!this._projectDir)
-            this.project();
+    private makeServicesDir(){
+        this._servicesDir = `${this._projectDir}/services`;
 
-        this.fs.mkdir(`${this._projectDir}/services`);
+        this.fs.mkdir(this._servicesDir);
+
+        return this._typesDir;
     }
 }

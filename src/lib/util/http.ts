@@ -1,24 +1,16 @@
-import { Parser } from './parser';
 import fetch, { Response, Headers } from 'node-fetch';
 
 export class Http {
-    private parser: Parser;
 
-    constructor(parser: Parser){
-        this.parser = parser;
-    }
-
-    async transformResponse(entity: string, url: string, headers?: string): Promise<string> {
+    async getJSON(url: string, headers?: string): Promise<any> {
         const res: Response = await fetch(url, this.fetchInit(headers));
 
         if(!res.ok)
-            throw new Error(`Couldn't fetch ${entity}, response ${res.status} ${res.statusText}`);
+            throw new Error(`Couldn't fetch ${url}, response ${res.status} ${res.statusText}`);
 
         const data = await res.json();
 
-        this.parser.loadJSON(data, entity);
-
-        return this.parser.dump();
+        return data;
     }
 
     private fetchInit(headers?: string): any {

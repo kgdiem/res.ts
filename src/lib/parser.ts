@@ -1,23 +1,45 @@
 import { ArrayTransformResponse } from './types';
 
-import { FileSystem, Compiler } from './util';
+import { FileSystem, Compiler, Http } from './util';
 
-import { Parser as IParser } from './types';
+import { Parser as IParser, ParserMetaData } from './types';
 
 export class Parser implements IParser {
     private fileSystem: FileSystem;
     private compiler: Compiler;
-
+    private http: Http;
     private _name: string = '';
     private object: any;
     private raw: string = '';
 
-    constructor(fileSystem: FileSystem, compiler: Compiler, str?: string, name?: string) {
+    public metadata: ParserMetaData = <ParserMetaData>{};
+
+    constructor(fileSystem: FileSystem, compiler: Compiler, http: Http, str?: string, name?: string) {
         this.fileSystem = fileSystem;
         this.compiler = compiler;
+        this.http = http;
 
         if(str)
-            this.load(str, name);
+            this.loadEntity(str, name);
+    }
+
+    process(dir: string, entities: string[]): Promise<ParserMetaData[]> {
+        const metadataCollection = <ParserMetaData[]> [];
+
+        return new Promise(async resolve => {
+            await Promise.all(entities.map(async entity => {
+                const name = this.getEntityName(entity);
+                const parser = new Parser(this.fileSystem, this.compiler, this.http);
+    
+                await parser.loadEntity(entity, name);
+    
+                await parser.dump(dir);
+    
+                metadataCollection.push(parser.metadata);
+            }));
+
+            resolve(metadataCollection);
+        });
     }
 
     load(str: string, name?: string): void {
@@ -35,6 +57,12 @@ export class Parser implements IParser {
         this.raw = this.parseJSON(json);
 
         this.object = json;
+    }
+
+    async loadUrl(url: string, name?: string): Promise<void> {
+        const json = await this.http.getJSON(url);
+
+        this.loadJSON(json, name);
     }
 
     async loadFile(path: string, name?: string): Promise<void> {
@@ -58,7 +86,7 @@ export class Parser implements IParser {
             ts = this.transform(this._name, this.object);
         }
 
-        const fileName = await this.fileSystem.write(ts, '.ts', dir);
+        const fileName = await this.fileSystem.write(ts, '.ts', this._name, dir);
 
         const compiled: boolean = this.compiler.compile(fileName);
 
@@ -73,6 +101,48 @@ export class Parser implements IParser {
         }
 
         return ts;
+    }
+
+    private loadEntity(entity: string, name?: string): Promise<void> {
+        if(/^http/.test(entity)){
+            return this.loadUrl(entity, name);
+        }
+        else if(/\.json$/.test(entity)){
+            return this.loadFile(entity, name);
+        }
+        else{
+            this.load(entity, name);
+        }
+
+        return Promise.resolve();
+    }
+
+    private getEntityName(entity: string): string {
+        let name = '';
+
+        if(/^http/.test(entity)){
+            const urlparts = entity.split('/');
+
+            let part = urlparts.pop();
+
+            if(part === '/')
+                part = urlparts.pop();
+
+            if(part && parseInt(part))
+                part = urlparts.pop();
+
+            if(part)
+                name = part;
+        }
+        else if(/\.json$/.test(entity)){
+            const fileParts = entity.replace(/\.json$/, '').split('/');
+            name = fileParts[fileParts.length - 1];
+        }
+        else{
+            name = `${new Date().getTime()}`;
+        }
+
+        return name;
     }
 
     private parse(str: string): any {

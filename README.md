@@ -15,7 +15,7 @@ Basic parsing is implemented. Read + fetch JSON, write to fs.
 
 # Usage/Examples:
 ```
-import { ParserFactory, GeneratorFactory, Http } from './lib/public_api';
+import { ParserFactory, GeneratorFactory } from './lib/public_api';
 
 const testJSON = `{
     "name": "test",
@@ -56,16 +56,6 @@ const testParserReadFile = async () => {
 }
 
 testParserReadFile();
-
-const http = new Http(parser);
-
-const testHttp = async () => {
-    const res: string = await http.transformResponse('Test', 'https://jsonplaceholder.typicode.com/todos/1');
-
-    console.log(res);
-}
-
-testHttp();
 
 // Creates project directory
 generator.project();
