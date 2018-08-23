@@ -16,7 +16,7 @@ parser.dump() // dumps string interface[s]
 
 # Examples:
 ```
-import { Parser, Http } from './lib/public_api';
+import { ParserFactory, GeneratorFactory, Http } from './lib/public_api';
 
 const testJSON = `{
     "name": "test",
@@ -31,7 +31,8 @@ const testJSON = `{
 
 const interfaceName = 'Test';
 
-const parser = new Parser(testJSON, interfaceName);
+const parser = ParserFactory.create(testJSON, interfaceName);
+const generator = GeneratorFactory.create();
 
 const testParser = async () => {
     const res: string = await parser.dump();
@@ -40,7 +41,7 @@ const testParser = async () => {
 }
 
 const testParserWriteFile = async () => {
-    const res: string = await parser.dump('./project');
+    const res: string = await parser.dump('./test');
 
     console.log(res);
 }
@@ -66,6 +67,8 @@ const testHttp = async () => {
 }
 
 testHttp();
+
+generator.project();
 ```
 
 # Known Issues:

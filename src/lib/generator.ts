@@ -10,5 +10,10 @@ export class Generator implements IGenerator {
         this.fs = fs;
     }
 
-    
+    project(path?: string) {
+        if(!path)
+            path = './project';
+
+        this.fs.mkdir(path);
+    }
 }
