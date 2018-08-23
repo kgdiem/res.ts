@@ -1,6 +1,8 @@
 import fs from 'fs';
 import path from 'path';
 
+import { FileSystem } from './fileSystem';
+
 const tempDir = './tmp';
 
 export class Writer {
@@ -8,7 +10,7 @@ export class Writer {
         return new Promise(resolve => {
             const writeDir = dir ? dir : tempDir;
 
-            this.mkdir(writeDir);
+            FileSystem.mkdir(writeDir);
 
             const filename = `${writeDir}/${new Date().getTime()}${extension}`;
 
@@ -16,18 +18,5 @@ export class Writer {
                 resolve(err ? '' : filename);
             });
         });
-    }
-
-    static delete(filename: string) {
-        try{
-            fs.unlinkSync(path.resolve(filename));
-        }
-        catch(e){}
-    }
-
-    private static mkdir(dir: string){
-        if(!fs.existsSync(dir)){
-            fs.mkdirSync(dir);
-        }
     }
 }

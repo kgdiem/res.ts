@@ -1,8 +1,6 @@
 import fs from 'fs';
 import path from 'path';
 
-const tempDir = './tmp';
-
 export class Reader {
     static read(filename: string): Promise<string> {
         return new Promise((resolve, reject) => {
