@@ -17,7 +17,6 @@ parser.dump() // dumps string interface[s]
 # Known Issues:
 
 # Todo
-* Add flat file option
 * Generate project folder
 * Generate services
 * Wrap up library into a CLI
