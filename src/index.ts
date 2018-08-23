@@ -2,7 +2,7 @@ export * from './lib/public_api';
 
 /*
 example: 
-
+*/
 import { Parser, Http } from './lib/public_api';
 
 const testJSON = `{
@@ -37,4 +37,3 @@ const testHttp = async () => {
 }
 
 testHttp();
-*/

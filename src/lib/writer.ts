@@ -1,14 +1,16 @@
 import fs from 'fs';
 import path from 'path';
 
-const dir = './tmp';
+const tempDir = './tmp';
 
 export class Writer {
-    static write(content: string, extension: string): Promise<string> {
+    static write(content: string, extension: string, dir?: string): Promise<string> {
         return new Promise(resolve => {
-            this.mkdir();
+            const writeDir = dir ? dir : tempDir;
 
-            const filename = `${dir}/${new Date().getTime()}${extension}`;
+            this.mkdir(writeDir);
+
+            const filename = `${writeDir}/${new Date().getTime()}${extension}`;
 
             fs.writeFile(path.resolve(filename), content, err => {
                 resolve(err ? '' : filename);
@@ -17,10 +19,10 @@ export class Writer {
     }
 
     static delete(filename: string) {
-        fs.unlinkSync(filename);
+        fs.unlinkSync(path.resolve(filename));
     }
 
-    private static mkdir(){
+    private static mkdir(dir: string){
         if(!fs.existsSync(dir)){
             fs.mkdirSync(dir);
         }

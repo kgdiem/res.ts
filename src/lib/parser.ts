@@ -30,7 +30,7 @@ export class Parser {
         this.object = json;
     }
 
-    async dump(): Promise<string> {
+    async dump(dir?: string): Promise<string> {
         if(!this.raw || !this.object) {
             throw new Error('No valid JSON string');
         } else if (!this._name) {
@@ -42,11 +42,15 @@ export class Parser {
 
         const ts = this.transform(this._name, this.object);
 
-        const fileName = await Writer.write(ts, '.ts');
+        const fileName = await Writer.write(ts, '.ts', dir);
 
         const compiled: boolean = Compiler.compile(fileName);
 
-        Writer.delete(fileName);
+        if(!dir || !compiled){
+            Writer.delete(fileName);
+        }
+
+        Writer.delete(fileName.replace(/.ts$/, '.js'));
 
         if(!compiled){
             throw new Error(`Compiler error`);
