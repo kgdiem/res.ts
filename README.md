@@ -68,7 +68,11 @@ const testHttp = async () => {
 
 testHttp();
 
+// Creates project directory
 generator.project();
+
+// Creates types folder inside project directory
+generator.types();
 ```
 
 # Known Issues:
