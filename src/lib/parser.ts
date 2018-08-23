@@ -2,6 +2,7 @@ import { ArrayTransformResponse } from './types';
 
 import { Compiler } from './compiler';
 import { Writer } from './writer';
+import { Reader } from './reader';
 
 export class Parser {
     private _name: string = '';
@@ -28,6 +29,12 @@ export class Parser {
         this.raw = this.parseJSON(json);
 
         this.object = json;
+    }
+
+    async loadFile(path: string, name?: string): Promise<void> {
+        const jsonString = await Reader.read(path);
+        
+        this.load(jsonString, name);
     }
 
     async dump(dir?: string): Promise<string> {

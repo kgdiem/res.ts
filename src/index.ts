@@ -34,6 +34,16 @@ const testParserWriteFile = async () => {
 testParser();
 testParserWriteFile();
 
+const testParserReadFile = async () => {
+    await parser.loadFile('./src/tests/test.json', interfaceName);
+
+    const res = await parser.dump();
+
+    console.log(res);
+}
+
+testParserReadFile();
+
 const http = new Http(parser);
 
 const testHttp = async () => {
