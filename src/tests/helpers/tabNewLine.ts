@@ -1,0 +1,1 @@
+export const tabNewline = /\n|\t/g;

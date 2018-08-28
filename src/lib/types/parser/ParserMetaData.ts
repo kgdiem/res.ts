@@ -1,6 +1,7 @@
 export interface ParserMetaData {
     interfaces: Interface[],
-    types: string[]
+    types: string[],
+    entity: string
 }
 
 export interface Interface {

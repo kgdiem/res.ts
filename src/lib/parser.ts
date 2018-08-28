@@ -1,4 +1,4 @@
-import { ArrayTransformResponse } from './types';
+import { ArrayTransformResponse, Interface } from './types';
 
 import { FileSystem, Compiler, Http } from './util';
 
@@ -12,7 +12,7 @@ export class Parser implements IParser {
     private object: any;
     private raw: string = '';
 
-    public metadata: ParserMetaData = <ParserMetaData>{};
+    public metadata: ParserMetaData = <ParserMetaData>{interfaces: [], types: [], entity: ''};
 
     constructor(fileSystem: FileSystem, compiler: Compiler, http: Http, str?: string, name?: string) {
         this.fileSystem = fileSystem;
@@ -34,6 +34,8 @@ export class Parser implements IParser {
                 await parser.loadEntity(entity, name);
     
                 await parser.dump(dir);
+
+                parser.metadata.entity = entity;
     
                 metadataCollection.push(parser.metadata);
             }));
@@ -161,13 +163,15 @@ export class Parser implements IParser {
         }
     }
 
-    private transform(name: string, object: any, anyTypeKeys?: string[], optionalKeys?: string[]): string {
+    private transform(name: string, object: any, anyTypeKeys?: string[], optionalKeys?: string[], interfaceArray?: Interface[]): string {
         let val, type, isObject;
         let ts: string = this.getName(name);
         let arrayTransformResponse: ArrayTransformResponse;
         let optional = false;
 
         let interfaces = new Array<string>();
+
+        const interfaceMetadata: Interface = {name: name, props: [], entity: ''};
 
         Object.keys(object).map(key => {
             if(anyTypeKeys && anyTypeKeys.indexOf(key) > -1){
@@ -184,7 +188,7 @@ export class Parser implements IParser {
             isObject = (type === 'object');
 
             if(isObject && Array.isArray(val)) {
-                arrayTransformResponse = this.transformArray(key, val);
+                arrayTransformResponse = this.transformArray(key, val, this.metadata.types, this.metadata.interfaces);
 
                 if(arrayTransformResponse.interface)
                     interfaces.push(arrayTransformResponse.interface);
@@ -192,7 +196,7 @@ export class Parser implements IParser {
                 type = arrayTransformResponse.type;
             }
             else if (isObject) {
-                interfaces.push(this.transform(key, val));
+                interfaces.push(this.transform(key, val, undefined, undefined, this.metadata.interfaces));
 
                 type = key;
             }
@@ -200,11 +204,25 @@ export class Parser implements IParser {
             key += optional ? '?' : '';
 
             ts += this.map(key, type);
+
+            interfaceMetadata.props.push({
+                key: key,
+                type: type
+            });
         });
 
         ts += '}\n';
 
         ts += interfaces.map((interfaceObj: string) => interfaceObj).join('\n');
+
+        interfaceMetadata.entity = ts;
+
+        if(interfaceArray){
+            interfaceArray.push(interfaceMetadata);
+        }
+        else{
+            this.metadata.interfaces.push(interfaceMetadata);
+        }
 
         return ts;
     }
@@ -212,7 +230,7 @@ export class Parser implements IParser {
     private transformJsonArray(name: string, object: any): string {
         const singular = name.replace(/s$/, '');
 
-        const type = this.transformArray(singular, object);
+        const type = this.transformArray(singular, object, this.metadata.types, this.metadata.interfaces);
 
         const ploralized = singular + 's';
 
@@ -223,7 +241,7 @@ export class Parser implements IParser {
         return ts;
     }
 
-    private transformArray(name: string, object: Array<any>): ArrayTransformResponse {
+    private transformArray(name: string, object: Array<any>, typesArray?: string[], interfaceArray?: Interface[]): ArrayTransformResponse {
         let val: any, type, isObject;
         let firstType: any;
         let pastObjectLookup: Array<string> = [];
@@ -286,10 +304,10 @@ export class Parser implements IParser {
                         }
                     })
 
-                    response.interface = this.transform(name, val, anyTypeKeys, optionalKeys);
+                    response.interface = this.transform(name, val, anyTypeKeys, optionalKeys, interfaceArray);
                 }
                 else {
-                    const interfaceVal = this.transform(name, val);
+                    const interfaceVal = this.transform(name, val, undefined, undefined, interfaceArray);
 
                     if(!response.interface){
                         response.interface = interfaceVal;
@@ -307,14 +325,17 @@ export class Parser implements IParser {
             else if(!firstType) {
                 firstType = type;
             } else if(type !== firstType) {
-                return anyType();
+                return anyType(typesArray);
             }
         }
 
         response.type = `Array<${firstType}>`;
 
         if(collision)
-            return this.handleCollision(name, response, object);
+            return this.handleCollision(name, response, object, interfaceArray);
+
+        if(typesArray)
+            typesArray.push(response.type);
 
         return response;
 
@@ -326,15 +347,18 @@ export class Parser implements IParser {
             return JSON.stringify(sortedKeys(val));
         }
 
-        function anyType(): ArrayTransformResponse {
+        function anyType(typesArray?: string[]): ArrayTransformResponse {
             response.type = 'Array<any>';
             response.interface = '';
 
+            if(typesArray)
+                typesArray.push(response.type);
+            
             return response;
         }
     }
 
-    private handleCollision(name: string, response: ArrayTransformResponse, arr: Array<any>): ArrayTransformResponse {
+    private handleCollision(name: string, response: ArrayTransformResponse, arr: Array<any>, interfaceArray?: Interface[]): ArrayTransformResponse {
         const mixedKeys: Array<string> = [];
 
         arr.map((obj, index) => {
@@ -347,7 +371,7 @@ export class Parser implements IParser {
             });
         });
 
-        response.interface = this.transform(name, arr[0], mixedKeys);
+        response.interface = this.transform(name, arr[0], mixedKeys, undefined, interfaceArray);
 
         return response;
     }
