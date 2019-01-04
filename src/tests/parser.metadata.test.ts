@@ -16,7 +16,7 @@ beforeEach(() => {
 test('Creates metadata object for simple object', async () => {
     parser.load('{"test": "a"}', "test");
 
-    await parser.dump()
+    await parser.dump();
 
     expect(parser.metadata).toBeDefined();
     expect(parser.metadata).toBeTruthy();
@@ -43,4 +43,28 @@ test('Creates metadata object for simple object', async () => {
     expect(prop.key).toBe('test');
     expect(prop.type).toBe('string');
 
+});
+
+test('Creates types for array', async () => {
+    parser.load('["a", "a"]', "test");
+
+    const output = await parser.dump();
+
+    expect(parser.metadata).toBeDefined();
+    expect(parser.metadata).toBeTruthy();
+
+    expect(parser.metadata.interfaces).toBeDefined();
+    expect(parser.metadata.interfaces.length).toBe(0);
+
+    expect(parser.metadata.types).toBeDefined();
+    expect(parser.metadata.types.length).toBe(1);
+
+    const type = parser.metadata.types[0];
+
+    expect(type).toBeDefined();
+
+    expect(type.type).toBe('Array<string>');
+    expect(type.name).toBe('tests');
+
+    expect(output.replace(tabNewline, '')).toBe('export type tests = Array<string>;');
 });

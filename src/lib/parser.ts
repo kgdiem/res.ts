@@ -1,4 +1,4 @@
-import { ArrayTransformResponse, Interface } from './types';
+import { ArrayTransformResponse, Interface, Type } from './types';
 
 import { FileSystem, Compiler, Http } from './util';
 
@@ -12,7 +12,7 @@ export class Parser implements IParser {
     private object: any;
     private raw: string = '';
 
-    public metadata: ParserMetaData = <ParserMetaData>{interfaces: [], types: [], entity: ''};
+    public metadata: ParserMetaData = <ParserMetaData>{interfaces: [], types: [], entity: '', name: ''};
 
     constructor(fileSystem: FileSystem, compiler: Compiler, http: Http, str?: string, name?: string) {
         this.fileSystem = fileSystem;
@@ -171,6 +171,8 @@ export class Parser implements IParser {
 
         let interfaces = new Array<string>();
 
+        this.metadata.name = name;
+
         const interfaceMetadata: Interface = {name: name, props: [], entity: ''};
 
         Object.keys(object).map(key => {
@@ -188,7 +190,7 @@ export class Parser implements IParser {
             isObject = (type === 'object');
 
             if(isObject && Array.isArray(val)) {
-                arrayTransformResponse = this.transformArray(key, val, this.metadata.types, this.metadata.interfaces);
+                arrayTransformResponse = this.transformArray(key, this.pluralize(key), val, this.metadata.types, this.metadata.interfaces);
 
                 if(arrayTransformResponse.interface)
                     interfaces.push(arrayTransformResponse.interface);
@@ -229,19 +231,29 @@ export class Parser implements IParser {
 
     private transformJsonArray(name: string, object: any): string {
         const singular = name.replace(/s$/, '');
+        const ploralized = this.pluralize(undefined, singular);
 
-        const type = this.transformArray(singular, object, this.metadata.types, this.metadata.interfaces);
-
-        const ploralized = singular + 's';
+        const type = this.transformArray(singular, ploralized, object, this.metadata.types, this.metadata.interfaces);
 
         let ts = this.getType(ploralized, type.type);
 
         ts += `\n${type.interface}`;
 
+        this.metadata.name = ploralized;
+
         return ts;
     }
 
-    private transformArray(name: string, object: Array<any>, typesArray?: string[], interfaceArray?: Interface[]): ArrayTransformResponse {
+    private pluralize(str?: string, singular?: string){
+        if(!str && !singular)
+            throw new Error('Missing argument');
+        else if(str && !singular)
+            singular = str.replace(/s$/, '');
+
+        return singular + 's';
+    }
+
+    private transformArray(name: string, ploral: string, object: Array<any>, typesArray?: Type[], interfaceArray?: Interface[]): ArrayTransformResponse {
         let val: any, type, isObject;
         let firstType: any;
         let pastObjectLookup: Array<string> = [];
@@ -266,14 +278,14 @@ export class Parser implements IParser {
 
             if(isObject && Array.isArray(val)){
                 if(hasArray){
-                    const arrayType = this.transformArray(name, val).type;
+                    const arrayType = this.transformArray(name, ploral, val).type;
 
                     if(arrayType !== firstType){
                         firstType = 'Array<any>';
                     }
                 } else {
                     hasArray = true;
-                    firstType = this.transformArray(name, val).type;
+                    firstType = this.transformArray(name, ploral, val).type;
                 }
             }
             else if (isObject) {
@@ -325,7 +337,7 @@ export class Parser implements IParser {
             else if(!firstType) {
                 firstType = type;
             } else if(type !== firstType) {
-                return anyType(typesArray);
+                return anyType(name, typesArray);
             }
         }
 
@@ -335,7 +347,7 @@ export class Parser implements IParser {
             return this.handleCollision(name, response, object, interfaceArray);
 
         if(typesArray)
-            typesArray.push(response.type);
+            typesArray.push({type: response.type, name: ploral});
 
         return response;
 
@@ -347,12 +359,12 @@ export class Parser implements IParser {
             return JSON.stringify(sortedKeys(val));
         }
 
-        function anyType(typesArray?: string[]): ArrayTransformResponse {
+        function anyType(name?: string, typesArray?: Type[]): ArrayTransformResponse {
             response.type = 'Array<any>';
             response.interface = '';
 
-            if(typesArray)
-                typesArray.push(response.type);
+            if(name && typesArray)
+                typesArray.push({type: response.type, name: ploral});
             
             return response;
         }
